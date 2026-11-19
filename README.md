@@ -18,7 +18,8 @@ Keys follow Windows and One Commander:
 | `` ` `` / `Ctrl+B` | Show or hide the folder columns |
 | `Space` | Preview |
 | `Ctrl+Space` / `Ins`, `Ctrl+A`, `Esc` | Mark, select all, clear marks |
-| `Shift+↑` / `Shift+↓` (also `Home`, `End`, `PgUp`, `PgDn`) | Mark a range |
+| `Shift+↑` / `Shift+↓` (also `Home`, `End`, `PgUp`, `PgDn`) | Mark a range; `Ctrl+Shift` adds it to the existing marks |
+| `Ctrl+↑` / `Ctrl+↓`, then `Ctrl+Space` | Move without changing marks, toggle the mark on the cursor |
 | `Ctrl+C` / `Ctrl+X` / `Ctrl+V` | Copy, cut, paste (across tabs too) |
 | `Ctrl+Shift+C` | Copy path |
 | `Alt+C` / `Alt+M` | Copy / move to the other pane |

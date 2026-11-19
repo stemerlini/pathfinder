@@ -480,7 +480,8 @@ ApplicationWindow {
     Shortcut { sequence: "Tab"; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.switchPane() }
     Shortcut { sequence: "Alt+F"; context: Qt.ApplicationShortcut; enabled: !win.typing && win.split; onActivated: win.switchPane() }
     Shortcut { sequence: "Space"; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.togglePreview() }
-    Shortcut { sequences: ["Ins", "Ctrl+Space"]; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.activePane.toggleMark() }
+    Shortcut { sequence: "Ins"; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.activePane.toggleMark(true) }
+    Shortcut { sequence: "Ctrl+Space"; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.activePane.toggleMark(false) }
     Shortcut { sequence: "Esc"; context: Qt.ApplicationShortcut; enabled: !win.typing && (previewPopup.visible || win.activePane.markedCount > 0); onActivated: previewPopup.visible ? previewPopup.close() : win.activePane.clearMarks() }
     Shortcut { sequences: ["Return", "Enter", "Right"]; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.activePane.openCurrent() }
     Shortcut { sequences: ["Backspace", "Left", "Alt+Up"]; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.activePane.goUp() }
@@ -880,7 +881,8 @@ ApplicationWindow {
                     ["Ctrl+L / Alt+D", qsTr("Type a path")],
                     ["Space", qsTr("Preview")],
                     ["Ctrl+Space / Ins", qsTr("Mark or unmark")],
-                    ["Shift+↑ / ↓, Shift+click", qsTr("Mark a range")],
+                    ["Shift+↑ / ↓, Shift+click", qsTr("Mark a range (add Ctrl to keep existing marks)")],
+                    ["Ctrl+↑ / ↓, Ctrl+Space", qsTr("Move without changing marks, toggle mark")],
                     ["Ctrl+A", qsTr("Select all")],
                     ["Ctrl+C / X / V", qsTr("Copy, cut, paste (across tabs too)")],
                     ["Ctrl+Shift+C", qsTr("Copy path")],

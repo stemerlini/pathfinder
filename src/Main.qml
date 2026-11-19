@@ -443,7 +443,9 @@ ApplicationWindow {
         var items = activePane.targets()
         if (items.length === 0)
             return
-        prompt.ask("trash", qsTr("Trash"), qsTr("Move %n items to the trash?", "", items.length), false, "")
+        prompt.ask("trash", qsTr("Trash"), backend.onCloud(items[0])
+                   ? qsTr("Delete %n items? They go to the cloud's recycle bin.", "", items.length)
+                   : qsTr("Move %n items to the trash?", "", items.length), false, "")
     }
 
     // What a prompt works on, taken when it opens: the pane may change its
@@ -464,7 +466,9 @@ ApplicationWindow {
         } else if (action === "rename") {
             report(backend.renameItem(c.path, text.trim()), qsTr("Renamed"))
         } else if (action === "trash") {
-            report(backend.trashItems(c.targets), qsTr("Moved %n items to the trash", "", c.targets.length))
+            report(backend.trashItems(c.targets), backend.onCloud(c.targets[0])
+                   ? qsTr("Deleted %n items", "", c.targets.length)
+                   : qsTr("Moved %n items to the trash", "", c.targets.length))
             c.pane.clearMarks()
         }
         refreshAll()
@@ -716,9 +720,9 @@ ApplicationWindow {
         }
         footer: DialogButtonBox {
             standardButtons: prompt.standardButtons
+            // Dialog already wires its button box to accept/reject; doing it
+            // here as well ran every prompt twice.
             background: null
-            onAccepted: prompt.accept()
-            onRejected: prompt.reject()
         }
 
         function ask(newAction, newTitle, message, input, initial, extra) {

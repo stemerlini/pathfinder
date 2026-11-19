@@ -14,7 +14,11 @@ public:
 
     Q_INVOKABLE QString copyItems(const QStringList &paths, const QString &destination);
     Q_INVOKABLE QString moveItems(const QStringList &paths, const QString &destination);
+    // Local items go to the desktop trash. Items on an rclone cloud mount are
+    // deleted, which puts them in the cloud's own recycle bin instead of a
+    // .Trash folder that would sync to every device.
     Q_INVOKABLE QString trashItems(const QStringList &paths);
+    Q_INVOKABLE static bool onCloud(const QString &path);
     Q_INVOKABLE QString makeFolder(const QString &parent, const QString &name);
     Q_INVOKABLE QString makeFile(const QString &parent, const QString &name, const QString &content, bool executable);
     Q_INVOKABLE QString renameItem(const QString &path, const QString &newName);

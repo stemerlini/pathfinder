@@ -23,7 +23,7 @@ Keys follow Windows and One Commander:
 | `Ctrl+C` / `Ctrl+X` / `Ctrl+V` | Copy, cut, paste (across tabs too) |
 | `Ctrl+Shift+C` | Copy path |
 | `Alt+C` / `Alt+M` | Copy / move to the other pane |
-| `F2`, `Delete` | Rename, trash |
+| `F2`, `Delete` | Rename, trash (inside a OneDrive mount, delete to the OneDrive recycle bin) |
 | `Alt+1…7` / `Alt+0` | Colour label / remove it |
 | `Ctrl+R` / `F5`, `Ctrl+H` | Refresh, hidden files |
 | `?`, `Ctrl+Q` | Help, quit |

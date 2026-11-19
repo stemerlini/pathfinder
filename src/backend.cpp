@@ -1,6 +1,7 @@
 #include "backend.h"
 #include "labels.h"
 #include "folderlist.h"
+#include "rclone.h"
 
 #include <QClipboard>
 #include <QCoreApplication>
@@ -129,14 +130,23 @@ QString Backend::moveItems(const QStringList &paths, const QString &destination)
     return errors.trimmed();
 }
 
+bool Backend::onCloud(const QString &path) {
+    return Rclone::mountFor(QFileInfo(path).absoluteFilePath()).isValid();
+}
+
 QString Backend::trashItems(const QStringList &paths) {
     QString errors;
-    for (const QString &path : paths)
-        if (QFile::moveToTrash(path)) {
+    for (const QString &path : paths) {
+        const QFileInfo info(path);
+        const bool done = !onCloud(path) ? QFile::moveToTrash(path)
+                        : info.isDir() && !info.isSymLink() ? QDir(path).removeRecursively()
+                        : QFile::remove(path);
+        if (done) {
             if (Labels::instance())
                 Labels::instance()->removed(QFileInfo(path).absoluteFilePath());
         } else
-            errors += (errors.isEmpty() ? "" : "\n") + tr("Cannot move %1 to the trash").arg(QFileInfo(path).fileName());
+            errors += (errors.isEmpty() ? "" : "\n") + tr("Cannot move %1 to the trash").arg(info.fileName());
+    }
     return errors;
 }
 

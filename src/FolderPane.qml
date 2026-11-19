@@ -25,6 +25,8 @@ Rectangle {
     property string lastPath: ""
     property int lastIndex: 0
     property int anchorIndex: 0
+    // Set while Shift extends a range, so the range keeps its start.
+    property bool extending: false
     property bool resetting: false
     readonly property string currentItemPath: list.currentItem ? list.currentItem.path : ""
     readonly property string currentItemCloud: list.currentItem ? list.currentItem.cloud : ""
@@ -108,7 +110,7 @@ Rectangle {
         return path ? [path] : []
     }
 
-    function toggleMark() {
+    function toggleMark(advance) {
         var path = currentPath()
         if (!path)
             return
@@ -118,7 +120,7 @@ Rectangle {
         else
             next[path] = true
         marked = next
-        if (list.currentIndex < list.count - 1)
+        if (advance !== false && list.currentIndex < list.count - 1)
             list.currentIndex++
     }
 
@@ -133,12 +135,17 @@ Rectangle {
 
     function select(index, modifiers) {
         if (modifiers & Qt.ShiftModifier) {
-            var next = {}
+            // Ctrl+Shift adds the range to what is already marked.
+            var next = (modifiers & Qt.ControlModifier) ? Object.assign({}, marked) : {}
             var from = Math.min(anchorIndex, index)
             var to = Math.max(anchorIndex, index)
             for (var i = from; i <= to; i++)
                 next[folder.pathAt(i)] = true
             marked = next
+            extending = true
+            list.currentIndex = index
+            extending = false
+            return
         } else if (modifiers & Qt.ControlModifier) {
             var toggled = Object.assign({}, marked)
             var path = folder.pathAt(index)
@@ -494,18 +501,28 @@ Rectangle {
                 }
             }
 
+            // Like Windows: arrows select the item they land on, Shift extends
+            // from the anchor, Ctrl moves without touching the selection and
+            // Ctrl+Shift adds a range.
             Keys.onPressed: event => {
-                const page = Math.max(1, Math.floor(height / 28) - 1)
-                if (event.key === Qt.Key_Home)
-                    currentIndex = 0
-                else if (event.key === Qt.Key_End)
-                    currentIndex = count - 1
-                else if (event.key === Qt.Key_PageUp)
-                    currentIndex = Math.max(0, currentIndex - page)
-                else if (event.key === Qt.Key_PageDown)
-                    currentIndex = Math.min(count - 1, currentIndex + page)
-                else
+                const modifiers = event.modifiers & (Qt.ShiftModifier | Qt.ControlModifier)
+                if (count === 0 || (event.modifiers & (Qt.AltModifier | Qt.MetaModifier)))
                     return
+                const page = Math.max(1, Math.floor(height / 28) - 1)
+                let target
+                if (event.key === Qt.Key_Up) target = currentIndex - 1
+                else if (event.key === Qt.Key_Down) target = currentIndex + 1
+                else if (event.key === Qt.Key_Home) target = 0
+                else if (event.key === Qt.Key_End) target = count - 1
+                else if (event.key === Qt.Key_PageUp) target = currentIndex - page
+                else if (event.key === Qt.Key_PageDown) target = currentIndex + page
+                else return
+                target = Math.max(0, Math.min(count - 1, target))
+                if (modifiers === Qt.ControlModifier)
+                    currentIndex = target
+                else
+                    pane.select(target, modifiers)
+                positionViewAtIndex(target, ListView.Contain)
                 event.accepted = true
             }
 
@@ -513,6 +530,8 @@ Rectangle {
                 if (pane.resetting || currentIndex < 0)
                     return
                 pane.lastIndex = currentIndex
+                if (!pane.extending)
+                    pane.anchorIndex = currentIndex
                 pane.lastPath = pane.folder.pathAt(currentIndex)
             }
 
@@ -546,9 +565,12 @@ Rectangle {
                 width: ListView.view.width
                 height: 28
                 radius: Math.min(4, theme.radius)
-                border.width: folderDrop.containsDrag ? 2 : 0
-                border.color: theme.accent
+                // With other items marked, an unmarked cursor row only gets an outline.
+                readonly property bool cursorOnly: ListView.isCurrentItem && pane.markedCount > 0 && !pane.marked[path]
+                border.width: folderDrop.containsDrag ? 2 : cursorOnly ? 1 : 0
+                border.color: cursorOnly && !folderDrop.containsDrag ? Qt.alpha(theme.accent, 0.7) : theme.accent
                 color: pane.marked[path] ? Qt.alpha(theme.accent, 0.28)
+                     : cursorOnly ? "transparent"
                      : ListView.isCurrentItem ? Qt.alpha(theme.accent, pane.active ? 0.22 : 0.08)
                      : label !== "" ? Qt.alpha(labelColor, 0.10)
                      : "transparent"

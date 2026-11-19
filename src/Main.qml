@@ -443,7 +443,9 @@ ApplicationWindow {
         var items = activePane.targets()
         if (items.length === 0)
             return
-        prompt.ask("trash", qsTr("Trash"), qsTr("Move %n items to the trash?", "", items.length), false, "")
+        prompt.ask("trash", qsTr("Trash"), backend.onCloud(items[0])
+                   ? qsTr("Delete %n items? They go to the cloud's recycle bin.", "", items.length)
+                   : qsTr("Move %n items to the trash?", "", items.length), false, "")
     }
 
     // What a prompt works on, taken when it opens: the pane may change its
@@ -464,7 +466,9 @@ ApplicationWindow {
         } else if (action === "rename") {
             report(backend.renameItem(c.path, text.trim()), qsTr("Renamed"))
         } else if (action === "trash") {
-            report(backend.trashItems(c.targets), qsTr("Moved %n items to the trash", "", c.targets.length))
+            report(backend.trashItems(c.targets), backend.onCloud(c.targets[0])
+                   ? qsTr("Deleted %n items", "", c.targets.length)
+                   : qsTr("Moved %n items to the trash", "", c.targets.length))
             c.pane.clearMarks()
         }
         refreshAll()
@@ -480,7 +484,8 @@ ApplicationWindow {
     Shortcut { sequence: "Tab"; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.switchPane() }
     Shortcut { sequence: "Alt+F"; context: Qt.ApplicationShortcut; enabled: !win.typing && win.split; onActivated: win.switchPane() }
     Shortcut { sequence: "Space"; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.togglePreview() }
-    Shortcut { sequences: ["Ins", "Ctrl+Space"]; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.activePane.toggleMark() }
+    Shortcut { sequence: "Ins"; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.activePane.toggleMark(true) }
+    Shortcut { sequence: "Ctrl+Space"; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.activePane.toggleMark(false) }
     Shortcut { sequence: "Esc"; context: Qt.ApplicationShortcut; enabled: !win.typing && (previewPopup.visible || win.activePane.markedCount > 0); onActivated: previewPopup.visible ? previewPopup.close() : win.activePane.clearMarks() }
     Shortcut { sequences: ["Return", "Enter", "Right"]; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.activePane.openCurrent() }
     Shortcut { sequences: ["Backspace", "Left", "Alt+Up"]; context: Qt.ApplicationShortcut; enabled: !win.typing; onActivated: win.activePane.goUp() }
@@ -715,9 +720,9 @@ ApplicationWindow {
         }
         footer: DialogButtonBox {
             standardButtons: prompt.standardButtons
+            // Dialog already wires its button box to accept/reject; doing it
+            // here as well ran every prompt twice.
             background: null
-            onAccepted: prompt.accept()
-            onRejected: prompt.reject()
         }
 
         function ask(newAction, newTitle, message, input, initial, extra) {
@@ -880,6 +885,8 @@ ApplicationWindow {
                     ["Ctrl+L / Alt+D", qsTr("Type a path")],
                     ["Space", qsTr("Preview")],
                     ["Ctrl+Space / Ins", qsTr("Mark or unmark")],
+                    ["Shift+↑ / ↓, Shift+click", qsTr("Mark a range (add Ctrl to keep existing marks)")],
+                    ["Ctrl+↑ / ↓, Ctrl+Space", qsTr("Move without changing marks, toggle mark")],
                     ["Ctrl+A", qsTr("Select all")],
                     ["Ctrl+C / X / V", qsTr("Copy, cut, paste (across tabs too)")],
                     ["Ctrl+Shift+C", qsTr("Copy path")],

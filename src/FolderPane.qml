@@ -25,6 +25,8 @@ Rectangle {
     property string lastPath: ""
     property int lastIndex: 0
     property int anchorIndex: 0
+    // Set while Shift extends a range, so the range keeps its start.
+    property bool extending: false
     property bool resetting: false
     readonly property string currentItemPath: list.currentItem ? list.currentItem.path : ""
     readonly property string currentItemCloud: list.currentItem ? list.currentItem.cloud : ""
@@ -139,6 +141,10 @@ Rectangle {
             for (var i = from; i <= to; i++)
                 next[folder.pathAt(i)] = true
             marked = next
+            extending = true
+            list.currentIndex = index
+            extending = false
+            return
         } else if (modifiers & Qt.ControlModifier) {
             var toggled = Object.assign({}, marked)
             var path = folder.pathAt(index)
@@ -494,18 +500,26 @@ Rectangle {
                 }
             }
 
+            // Arrows, Home/End and Page Up/Down move; with Shift they mark from where you started.
             Keys.onPressed: event => {
-                const page = Math.max(1, Math.floor(height / 28) - 1)
-                if (event.key === Qt.Key_Home)
-                    currentIndex = 0
-                else if (event.key === Qt.Key_End)
-                    currentIndex = count - 1
-                else if (event.key === Qt.Key_PageUp)
-                    currentIndex = Math.max(0, currentIndex - page)
-                else if (event.key === Qt.Key_PageDown)
-                    currentIndex = Math.min(count - 1, currentIndex + page)
-                else
+                const modifiers = event.modifiers & ~Qt.KeypadModifier
+                if (count === 0 || (modifiers !== Qt.NoModifier && modifiers !== Qt.ShiftModifier))
                     return
+                const page = Math.max(1, Math.floor(height / 28) - 1)
+                let target
+                if (event.key === Qt.Key_Up) target = currentIndex - 1
+                else if (event.key === Qt.Key_Down) target = currentIndex + 1
+                else if (event.key === Qt.Key_Home) target = 0
+                else if (event.key === Qt.Key_End) target = count - 1
+                else if (event.key === Qt.Key_PageUp) target = currentIndex - page
+                else if (event.key === Qt.Key_PageDown) target = currentIndex + page
+                else return
+                target = Math.max(0, Math.min(count - 1, target))
+                if (modifiers === Qt.ShiftModifier)
+                    pane.select(target, Qt.ShiftModifier)
+                else
+                    currentIndex = target
+                positionViewAtIndex(target, ListView.Contain)
                 event.accepted = true
             }
 
@@ -513,6 +527,8 @@ Rectangle {
                 if (pane.resetting || currentIndex < 0)
                     return
                 pane.lastIndex = currentIndex
+                if (!pane.extending)
+                    pane.anchorIndex = currentIndex
                 pane.lastPath = pane.folder.pathAt(currentIndex)
             }
 

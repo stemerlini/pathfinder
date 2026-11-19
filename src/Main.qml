@@ -880,6 +880,7 @@ ApplicationWindow {
                     ["Ctrl+L / Alt+D", qsTr("Type a path")],
                     ["Space", qsTr("Preview")],
                     ["Ctrl+Space / Ins", qsTr("Mark or unmark")],
+                    ["Shift+↑ / ↓, Shift+click", qsTr("Mark a range")],
                     ["Ctrl+A", qsTr("Select all")],
                     ["Ctrl+C / X / V", qsTr("Copy, cut, paste (across tabs too)")],
                     ["Ctrl+Shift+C", qsTr("Copy path")],
